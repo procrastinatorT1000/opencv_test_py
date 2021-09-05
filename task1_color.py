@@ -11,8 +11,8 @@ while(True):
 
         hsv = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
 
-        mask1 = cv2.inRange(hsv, (0,50,50), (15,255,255))
-        mask2 = cv2.inRange(hsv, (175,50,20), (180,255,255))
+        mask1 = cv2.inRange(hsv, (0,100,50), (15,255,255))
+        mask2 = cv2.inRange(hsv, (175,100,20), (180,255,255))
         mask = cv2.bitwise_or(mask1, mask2)
         #mask = mask1
         
