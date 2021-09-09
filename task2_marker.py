@@ -3,6 +3,7 @@ import cv2
 import cv2.aruco as aruco
 import os
 import pickle
+import time
 
 # Check for camera calibration data
 if not os.path.exists('calibration.pckl'):
@@ -10,7 +11,7 @@ if not os.path.exists('calibration.pckl'):
     exit()
 else:
     f = open('calibration.pckl', 'rb')
-    (cameraMatrix, distCoeffs) = pickle.load(f)
+    (cameraMatrix, distCoeffs, _, _) = pickle.load(f)
     f.close()
     if cameraMatrix is None or distCoeffs is None:
         print("Calibration issue. Remove calibration.pckl and recalibrate your camera with CalibrateCamera.py.")
@@ -38,7 +39,7 @@ if cap.isOpened():
     print("Video w:", WIDTH, "h:", HEIGHT, "FPS:", FPS)
 
     fourcc = cv2.VideoWriter_fourcc(*'mp4v')
-    out = cv2.VideoWriter('output.mp4', fourcc, FPS, (WIDTH, HEIGHT))
+    out = cv2.VideoWriter('marker_output.mp4', fourcc, FPS, (WIDTH, HEIGHT))
 else:
     print("ERROR! File ", vid, " isn't found!")
 
@@ -64,12 +65,21 @@ while(True):
 
         if( markerCorners != [] ):
             #print(markerCorners)
-            frame = cv2.aruco.drawDetectedMarkers(frame, markerCorners, markerIds)
-            rvecs, tvecs, _ = aruco.estimatePoseSingleMarkers(markerCorners, 1, cameraMatrix, distCoeffs)
-            print( rvecs, tvecs )
+            frame = cv2.aruco.drawDetectedMarkers(frame,
+            markerCorners, markerIds)
+            rvecs, tvecs, _ =  aruco.estimatePoseSingleMarkers(markerCorners, 1,
+            cameraMatrix, distCoeffs)
+            #print( rvecs, tvecs )
             for rvec, tvec in zip(rvecs, tvecs):
                 frame = aruco.drawAxis(frame, cameraMatrix, distCoeffs, rvec, tvec, 1)
 
+            retval, rvec, tvec =   aruco.estimatePoseBoard(markerCorners, markerIds, board, cameraMatrix, distCoeffs, rvec, tvec)
+            dst, jacobian = cv2.Rodrigues(rvec)
+            rvec_trs = dst.transpose()
+            worldPos = - rvec_trs * tvec
+            worldPos = [worldPos[0][0],worldPos[1][1], worldPos[2][2]]
+            time.sleep(0.5)
+            print( worldPos )
 
             cv2.imshow('frame',frame)
             out.write(frame)
